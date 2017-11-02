@@ -62,6 +62,7 @@
     </ApplicationDefinition>
     <Compile Include="Data\Agents\EventArgs\ActionEventArgs.cs" />
     <Compile Include="Data\Agents\EventArgs\GuestEventArgs.cs" />
+    <Compile Include="Data\Agents\EventArgs\StatusEventArgs.cs" />
     <Compile Include="Data\Agents\GuestAgent.cs" />
     <Compile Include="Data\Agents\BouncerAgent.cs" />
     <Compile Include="Data\Agents\WaiterAgent.cs" />
