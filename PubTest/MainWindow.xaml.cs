@@ -17,22 +17,25 @@ namespace PubTest
         public MainWindow()
         {
             InitializeComponent();
-            BarStatus bs = new BarStatus(10, 10, 300);
-            StatusPanel.DataContext = bs;
+            BarStatus bs = new BarStatus(10, 10, 100);
+            this.DataContext = bs;
 
             //Not MVVM
-            bs.RegisterBartenderActionCallback((sender, e) =>
-            {
-                Dispatcher.Invoke(() => { BartenderActionList.Items.Insert(0, e.ActionValue); });
-            });
-            bs.RegisterWaiterActionCallback((sender, e) =>
-            {
-                Dispatcher.Invoke(() => { WaiterActionList.Items.Insert(0, e.ActionValue); });
-            });
-            bs.RegisterGuestActionCallback((sender, e) =>
-            {
-                Dispatcher.Invoke(() => { GuestActionList.Items.Insert(0, e.ActionValue); });
-            });
+            //bs.RegisterBartenderActionCallback((sender, e) =>
+            //{
+            //    Dispatcher.Invoke(() => { BartenderActionList.Items.Insert(0, e.ActionValue); });
+            //});
+
+            //bs.RegisterWaiterActionCallback((sender, e) =>
+            //{
+            //    Dispatcher.Invoke(() => { WaiterActionList.Items.Insert(0, e.ActionValue); });
+            //});
+
+            //bs.RegisterGuestActionCallback((sender, e) =>
+            //{
+            //    Dispatcher.Invoke(() => { GuestActionList.Items.Insert(0, e.ActionValue); });
+            //});
+
         }
     }
 }

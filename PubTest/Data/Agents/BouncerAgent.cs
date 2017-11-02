@@ -26,10 +26,10 @@ namespace PubTest
             CurrentBar = currentBar;
             totalBouncers++;
             Random rand = new Random();
-            //Behaviour = new BlockingCollection<Action>();
+
             Behaviour = () =>
             {
-                while (currentBar.GuestsInBar >= 10)
+                while (currentBar.GuestsInBarQueue >= 10)
                 {
                     Thread.Sleep(200);
                 }

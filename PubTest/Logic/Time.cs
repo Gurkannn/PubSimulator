@@ -30,23 +30,24 @@ namespace PubTest
 
         #endregion
 
-        public void CreateAndStartAgent(BaseAgent agent, CancellationToken Cancel)
+        public void StartAgent(BaseAgent agent, CancellationToken Cancel)
         {
             Task.Factory.StartNew(() =>
             {      
-                ExecuteBehaviours(agent, Cancel);
+                ExecuteBehaviour(agent, Cancel);
             });
             AddAgent(agent);
         }
 
-        private async void ExecuteBehaviours(BaseAgent b, CancellationToken token)
+        private async void ExecuteBehaviour(BaseAgent b, CancellationToken token)
         {
             while (b.IsActive)
             {
                 if (token.IsCancellationRequested)
                 {
-                    b.Deactivate();
+                    Console.WriteLine(b.GetType() + " Thread Cancelled");
                     token.ThrowIfCancellationRequested();
+                    b.Deactivate();
                 }
                 b.Behaviour();
                 await Task.Delay(1000);

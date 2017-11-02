@@ -11,8 +11,8 @@ namespace PubTest
     {
         public abstract bool IsActive { get; set; }
         public abstract BarStatus CurrentBar { get; set; }
+        public abstract Action Behaviour { get; set; }
         public virtual void SetActive() { IsActive = true; }
         public virtual void Deactivate() { IsActive = false; }
-        public abstract Action Behaviour { get; set; }
     }
 }

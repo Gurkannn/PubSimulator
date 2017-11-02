@@ -23,9 +23,9 @@ namespace PubTest
         public WaiterAgent(BarStatus currentBar, int timeToGetGlasses, int timeToWashGlasses)
         {
             CurrentBar = currentBar;
-            Behaviour = () => 
+            Behaviour = () =>
             {
-                while (currentBar.GlassAvailableCount >= currentBar.TotalGlassCount)
+                while (currentBar.TablesWithGlasses < 1)
                 {
                     Thread.Sleep(400);
                 }
@@ -33,10 +33,10 @@ namespace PubTest
                 currentBar.AddWaiterAction("Picked all the glasses from the tables");
                 var amountOfGlasses = currentBar.TablesWithGlasses;
                 Thread.Sleep(timeToWashGlasses);
-                currentBar.AddWaiterAction("Washed all the glasses and put them on shelf");
+                currentBar.AddWaiterAction(String.Format("Washed {0} glasses and put them on shelf", amountOfGlasses));
                 currentBar.GlassInUseCount -= amountOfGlasses;
                 currentBar.TablesWithGlasses -= amountOfGlasses;
-                if(currentBar.GuestsInBar == 0 && !currentBar.IsRunning && currentBar.GlassInUseCount == 0)
+                if (currentBar.GuestsInBarQueue == 0 && !currentBar.IsRunning && currentBar.GlassInUseCount == 0)
                 {
                     Deactivate();
                 }

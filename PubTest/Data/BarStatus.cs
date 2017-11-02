@@ -6,20 +6,35 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
 using System.Windows.Threading;
 
 namespace PubTest
 {
     public class BarStatus : BaseViewModel
     {
+
+        #region ICommands
+
+        public ICommand StartSimulationCommand { get; set; }
+        public bool CanStartSimulation { get { return !IsRunning; } }
+
+        #endregion
+
         #region Constructor
 
         public BarStatus(int TotalGlasses, int TotalTables, int SimulationDurationInSeconds)
         {
+            SimulationDuration = SimulationDurationInSeconds;
+            StartSimulationCommand = new RelayCommand(() =>
+            {
+                Dispatcher.CurrentDispatcher.Invoke(() => { StartSimulation(SimulationDuration); });
+            });
+
             time = new Time();
-            SimulationTimeLeft = SimulationDurationInSeconds;
             AgentCancellationToken = new CancellationToken(IsRunning);
-            RegisterGuestCreatedCallback((sender, e) => { time.CreateAndStartAgent(e.agent, AgentCancellationToken); });
+            RegisterGuestCreatedCallback((sender, e) => { time.StartAgent(e.agent, new CancellationToken(!e.agent.IsActive)); });
 
             TotalGlassCount = TotalGlasses;
             TotalTableCount = TotalTables;
@@ -30,33 +45,33 @@ namespace PubTest
             GuestCompletedActions = new BlockingCollection<string>();
 
             BarQueue = new ConcurrentQueue<GuestAgent>();
-            StartSimulation(SimulationDurationInSeconds);
+
+
+            //StartSimulation(SimulationDurationInSeconds);
         }
 
         #endregion
 
+        #region Simulation 
+
         public void StartSimulation(int SimulationTime)
         {
-            startTime = DateTime.Now + TimeSpan.FromSeconds(SimulationTime);
-            startTime.AddSeconds(SimulationTime);
+            SimulationTimeLeft = SimulationDuration;
             IsRunning = true;
-            Task.Factory.StartNew(() =>
+
+            var timer = new DispatcherTimer()
             {
-                var t = new System.Timers.Timer()
-                {
-                    Interval = 1000,
-                    Enabled = true,
-                };
-                t.Elapsed += (sender, e) => { SimulationCountdown(); };
-                SimulationCountdown();
-            });
+                Interval = TimeSpan.FromSeconds(1),
+                IsEnabled = true
+            };
+            timer.Tick += (sender, e) => { SimulationCountdown(); if (!IsRunning) timer.Stop(); };
+
             CreateBartenderAgent();
             CreateBouncerAgent();
             CreateWaiterAgent();
         }
 
-        #region Simulation 
-
+        //Only stop the bouncer here to stop guest flow and the other agents will stop when work is done
         public void StopSimulation()
         {
             IsRunning = false;
@@ -65,14 +80,14 @@ namespace PubTest
 
         private void SimulationCountdown()
         {
-            SimulationTimeLeft = (startTime - DateTime.Now).Seconds;
+            SimulationTimeLeft--;
             if (SimulationTimeLeft <= 0)
                 StopSimulation();
         }
 
         #region SimulationSpeed
 
-        private float TimeMultiplier { get; } = 1.0f;
+        private float TimeMultiplier { get; } = 0.5f;
         public int AdjustTimeToSimulationSpeed(int time)
         {
             return (int)(time * TimeMultiplier);
@@ -84,7 +99,7 @@ namespace PubTest
 
         #region Private Members
 
-        private DateTime startTime { get; set; }
+        private int SimulationDuration;
 
         private Time time;
         private CancellationToken AgentCancellationToken;
@@ -107,10 +122,26 @@ namespace PubTest
         #region CompletedActionLists       
 
         #region Observable Lists
-        public ObservableCollection<string> BartenderActions { get; set; } = new ObservableCollection<string>();
-        public ObservableCollection<string> WaiterActions { get; set; } = new ObservableCollection<string>();
-        public ObservableCollection<string> BouncerActions { get; set; } = new ObservableCollection<string>();
-        public ObservableCollection<string> GuestActions { get; set; } = new ObservableCollection<string>();
+        private ObservableCollection<string> bartenderActions = new ObservableCollection<string>();
+        public ObservableCollection<string> BartenderActions { get { return bartenderActions; } set { bartenderActions = value; OnPropertyChanged("BartenderActions"); } }
+
+        private ObservableCollection<string> waiterActions = new ObservableCollection<string>();
+        public ObservableCollection<string> WaiterActions
+        {
+            get { return waiterActions; }
+            set
+            {
+                waiterActions = value; OnPropertyChanged("WaiterActions");
+            }
+        }
+
+        private ObservableCollection<string> bouncerActions = new ObservableCollection<string>();
+        public ObservableCollection<string> BouncerActions { get { return bouncerActions; } set { bouncerActions = value; OnPropertyChanged("BouncerActions"); } }
+
+        private ObservableCollection<string> guestActions = new ObservableCollection<string>();
+        public ObservableCollection<string> GuestActions { get { return guestActions; } set { guestActions = value; OnPropertyChanged("GuestActions"); } }
+
+
         #endregion
 
         #region Thread-safe lists
@@ -124,35 +155,50 @@ namespace PubTest
 
         public void AddBartenderAction(string actionText)
         {
-            actionText = TotalActions + ": " + actionText;
-            BartenderCompletedActions.Add(actionText);
-            BartenderActions.Insert(0, actionText);
-            OnPropertyChanged("BartenderActions");
-            OnBartenderActionEventTrigger(new ActionEventArgs(actionText));
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                actionText = TotalActions + ": " + actionText;
+                BartenderCompletedActions.Add(actionText);
+                BartenderActions.Insert(0, actionText);
+                OnPropertyChanged("BartenderActions");
+                OnBartenderActionEventTrigger(new ActionEventArgs(actionText));
+            }));
         }
+
         public void AddWaiterAction(string actionText)
         {
-            actionText = TotalActions + ": " + actionText;
-            WaiterCompletedActions.Add(actionText);
-            WaiterActions.Insert(0, actionText);
-            OnPropertyChanged("WaiterActions");
-            OnWaiterActionEventTrigger(new ActionEventArgs(actionText));
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                actionText = TotalActions + ": " + actionText;
+                WaiterCompletedActions.Add(actionText);
+                WaiterActions.Insert(0, actionText);
+                OnPropertyChanged("WaiterActions");
+                OnWaiterActionEventTrigger(new ActionEventArgs(actionText));
+            }));
         }
+
         public void AddBouncerAction(string actionText)
         {
-            actionText = TotalActions + ": " + actionText;
-            BouncerCompletedActions.Add(actionText);
-            BouncerActions.Insert(0, actionText);
-            OnPropertyChanged("BouncerActions");
-            OnBouncerActionEventTrigger(new ActionEventArgs(actionText));
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                actionText = TotalActions + ": " + actionText;
+                BouncerCompletedActions.Add(actionText);
+                BouncerActions.Insert(0, actionText);
+                OnPropertyChanged("BouncerActions");
+                OnBouncerActionEventTrigger(new ActionEventArgs(actionText));
+            }));
         }
+
         public void AddGuestAction(string actionText)
         {
-            actionText = TotalActions + ": " + actionText;
-            GuestCompletedActions.Add(actionText);
-            GuestActions.Insert(0, actionText);
-            OnPropertyChanged("GuestActions");
-            OnGuestActionEventTrigger(new ActionEventArgs(actionText));
+            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                actionText = TotalActions + ": " + actionText;
+                GuestCompletedActions.Add(actionText);
+                GuestActions.Insert(0, actionText);
+                OnPropertyChanged("GuestActions");
+                OnGuestActionEventTrigger(new ActionEventArgs(actionText));
+            }));
         }
 
         public delegate void ActionEventHandler(object sender, ActionEventArgs e);
@@ -232,7 +278,7 @@ namespace PubTest
 
         public GuestAgent CreateGuest(string name)
         {
-            var newGuest = new GuestAgent(this, 1000, 4000) { Name = name, IsActive = true };
+            var newGuest = new GuestAgent(this, 1000, 4000, name) { IsActive = true };
             var eventArgs = new GuestEventArgs(newGuest);
             OnGuestCreated.Invoke(this, eventArgs);
             return newGuest;
@@ -246,16 +292,18 @@ namespace PubTest
         public GuestAgent FirstInQueue { get { while (!CanTakeOrder) { Thread.Sleep(200); } return BarQueue.First(); } }
         public bool IsGuestInQueue(GuestAgent guest) { return BarQueue.Contains(guest); }
 
-        public void AddGuestToQueue(GuestAgent guest) { BarQueue.Enqueue(guest); }
+        public void AddGuestToQueue(GuestAgent guest) { BarQueue.Enqueue(guest); GuestsInBarQueue++; }
 
         public string ServeAndRemoveFirstGuestFromQueue()
         {
-            BarQueue.TryDequeue(out GuestAgent result);
-            result.GotDrink = true;
-            return result.Name;
+            BarQueue.TryDequeue(out GuestAgent guest);
+            guest.GotDrink = true;
+            GuestsInBarQueue--;
+            return guest.Name;
         }
 
-        public int GuestsInBar { get { return GuestAgent.TotalGuests; } }
+        public int GuestsInBarQueue { get; set; }
+        public int GuestsInTableQueue { get; set; }
         public bool CanTakeTable { get { return TableAvailableCount > 0; } }
 
         public int TablesWithGlasses { get; set; }
@@ -276,7 +324,7 @@ namespace PubTest
             bartender = new BartenderAgent(this, 3000, 3000)
             { IsActive = true };
 
-            time.CreateAndStartAgent(bartender, AgentCancellationToken);
+            time.StartAgent(bartender, AgentCancellationToken);
         }
 
         public void CreateBouncerAgent()
@@ -284,7 +332,7 @@ namespace PubTest
             bouncer = new BouncerAgent(this, 4000, 10000)
             { IsActive = true };
 
-            time.CreateAndStartAgent(bouncer, AgentCancellationToken);
+            time.StartAgent(bouncer, AgentCancellationToken);
         }
 
         public void CreateWaiterAgent()
@@ -292,7 +340,7 @@ namespace PubTest
             waiter = new WaiterAgent(this, 10000, 15000)
             { IsActive = true };
 
-            time.CreateAndStartAgent(waiter, AgentCancellationToken);
+            time.StartAgent(waiter, AgentCancellationToken);
         }
 
         #endregion

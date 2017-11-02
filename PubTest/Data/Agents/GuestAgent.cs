@@ -23,12 +23,17 @@ namespace PubTest
             GotDrink = false;
             IsSitting = false;
         }
-        public GuestAgent(BarStatus currentBar, int TravelTimeToBar, int TravelTimeToTable)
+        public GuestAgent(BarStatus currentBar, int TravelTimeToBar, int TravelTimeToTable, string Name)
         {
             TotalGuests++;
+
+            this.Name = Name;
+
             Random rand = new Random();
             int drinkTime = currentBar.AdjustTimeToSimulationSpeed(rand.Next(10000, 20000));
-            //Behaviour = new BlockingCollection<Action>();
+
+            currentBar.AddGuestAction(Name + " entered the pub");
+
             Behaviour = () =>
             {
                 if (IsActive)
@@ -38,7 +43,7 @@ namespace PubTest
                     {
                         Thread.Sleep(currentBar.AdjustTimeToSimulationSpeed(TravelTimeToBar));
                         currentBar.AddGuestToQueue(this);
-                        currentBar.AddGuestAction(Name + " entered bar queue");
+                        currentBar.AddGuestAction(Name + " walked up to bar");
                     }
                     while (!GotDrink)
                     {
@@ -46,12 +51,14 @@ namespace PubTest
                     }
                     if (GotDrink && !IsSitting)
                     {
+                        currentBar.GuestsInTableQueue++;
                         while (!currentBar.CanTakeTable)
                         {
                             Thread.Sleep(200);
                         }
-                        Thread.Sleep(currentBar.AdjustTimeToSimulationSpeed(TravelTimeToTable));
                         currentBar.TakeTable();
+                        currentBar.GuestsInTableQueue--;
+                        Thread.Sleep(currentBar.AdjustTimeToSimulationSpeed(TravelTimeToTable));
                         IsSitting = true;
                         currentBar.AddGuestAction(Name + " sat down at table");
                     }

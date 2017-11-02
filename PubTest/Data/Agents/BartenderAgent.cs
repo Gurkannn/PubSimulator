@@ -31,17 +31,21 @@ namespace PubTest
             CurrentBar = currentBar;
             TotalBartenders++;
             gettingGlassWaitTime = getGlassWait;
-            pouringDrinkWaitTime = pourDrinkWait;           
-            
+            pouringDrinkWaitTime = pourDrinkWait;
+
             Behaviour = () =>
             {
                 if (IsActive && currentBar.CanTakeOrder)
                 {
                     if (!holdingGlass)
                     {
-                        while (!currentBar.CanTakeGlass)
+                        if (!currentBar.CanTakeGlass)
                         {
-                            Thread.Sleep(100);
+                            currentBar.AddBartenderAction("Waiting for glasses");
+                            while (!currentBar.CanTakeGlass)
+                            {
+                                Thread.Sleep(200);
+                            }
                         }
                         Thread.Sleep(currentBar.AdjustTimeToSimulationSpeed(gettingGlassWaitTime));
                         currentBar.TakeGlassFromShelf();
@@ -56,11 +60,11 @@ namespace PubTest
                         currentBar.AddBartenderAction("Served drink to customer " + nameOfGuest);
                     }
                 }
-                if (currentBar.GuestsInBar == 0 && !currentBar.IsRunning)
+                if (currentBar.GuestsInBarQueue == 0 && !currentBar.IsRunning)
                 {
                     Deactivate();
                 }
-            };            
+            };
         }
 
 
