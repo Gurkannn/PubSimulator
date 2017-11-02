@@ -5,8 +5,83 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PubTest"
         mc:Ignorable="d"
+        MinWidth="800"
+        MinHeight="450"
         Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        
-    </Grid>
+    <Border Padding="5">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="9*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+
+            <Button  Margin="4" Content="Open/Close Bar" Grid.ColumnSpan="3" Grid.Row="2" />
+
+            <!-- First Column-->
+            <Label HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="0" Content="Bartender" />
+            <Grid Margin="4" Grid.Column="0" Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="9*"/>
+                    <RowDefinition Height="1*" />
+                </Grid.RowDefinitions>
+                <ListBox x:Name="BartenderActionList" ItemsSource="{Binding BartenderActions}" Grid.Row="0" VerticalAlignment="Stretch" />
+                <Button Grid.Row="2" Content="Start/Stop" />
+            </Grid>
+
+            <!-- Second Column-->
+            <Label HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" Content="Servitris" />
+            <Grid Margin="4" Grid.Column="1" Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="9*"/>
+                    <RowDefinition Height="1*" />
+                </Grid.RowDefinitions>
+                <ListBox x:Name="WaiterActionList" ItemsSource="{Binding WaiterActions}"  Grid.Row="0" VerticalAlignment="Stretch" />
+                <Button Grid.Row="2" Content="Start/Stop" />
+            </Grid>
+
+            <!-- Third Column-->
+            <Label HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="2" Content="Gäster" />
+            <Grid Margin="4" Grid.Column="2" Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="9*"/>
+                    <RowDefinition Height="1*" />
+                </Grid.RowDefinitions>
+                <ListBox x:Name="GuestActionList" ItemsSource="{Binding GuestActions}"  Grid.Row="0" VerticalAlignment="Stretch" />
+                <Button Grid.Row="2" Content="Start/Stop" />
+            </Grid>
+
+            <!-- Fourth Column-->
+            <Label HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="3" Content="Status" />
+            <StackPanel x:Name="StatusPanel" Grid.Column="3" Grid.Row="1">
+                <TextBlock HorizontalAlignment="Center" Grid.Row="0">
+                    <Run Text="Guests in bar:"/>
+                    <Run Text="{Binding GuestsInBar, Mode=OneWay, FallbackValue=0}" />
+                </TextBlock>
+                <TextBlock HorizontalAlignment="Center" Grid.Row="1">
+                    <Run Text="Glass on shelf:"/>
+                    <Run Text="{Binding GlassAvailableCount, Mode=OneWay, FallbackValue=1}" />
+                    <Run>(</Run><Run Text="{Binding TotalGlassCount, Mode=OneWay, FallbackValue=0}"/><Run Text=" total)" />
+                </TextBlock>
+                <TextBlock HorizontalAlignment="Center" Grid.Row="2">
+                    <Run Text="Empty tables:"/>
+                    <Run Text="{Binding TableAvailableCount, Mode=OneWay, FallbackValue=1}" />
+                    <Run>(</Run><Run Text="{Binding TotalTableCount, Mode=OneWay, FallbackValue=0}"/><Run Text=" total)" />
+                </TextBlock>
+                <TextBlock HorizontalAlignment="Center" Grid.Row="2">
+                    <Run Text="Time left:"/>
+                    <Run Text="{Binding SimulationTimeLeft, Mode=OneWay, FallbackValue=1}" />
+                    <!--<Run>(</Run><Run Text="{Binding TotalTables, Mode=OneWay, FallbackValue=0}"/><Run Text=" total)" />-->
+                </TextBlock>
+            </StackPanel>
+
+            <Button Content="Stop All Threads" Foreground="Red" Grid.Column="3" Grid.Row="2" Margin="4" />
+        </Grid>
+    </Border>
 </Window>

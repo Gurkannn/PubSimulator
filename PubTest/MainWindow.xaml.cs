@@ -1,17 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+//using System.Timers;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace PubTest
 {
@@ -20,9 +11,28 @@ namespace PubTest
     /// </summary>
     public partial class MainWindow : Window
     {
+
+
+        //BarViewModel ViewModel { get; set; }
         public MainWindow()
         {
             InitializeComponent();
+            BarStatus bs = new BarStatus(10, 10, 120);
+            StatusPanel.DataContext = bs;
+
+            //Not MVVM
+            bs.RegisterBartenderActionCallback((sender, e) =>
+            {
+                Dispatcher.Invoke(() => { BartenderActionList.Items.Insert(0, e.ActionValue); });
+            });
+            bs.RegisterWaiterActionCallback((sender, e) =>
+            {
+                Dispatcher.Invoke(() => { WaiterActionList.Items.Insert(0, e.ActionValue); });
+            });
+            bs.RegisterGuestActionCallback((sender, e) =>
+            {
+                Dispatcher.Invoke(() => { GuestActionList.Items.Insert(0, e.ActionValue); });
+            });
         }
     }
 }
