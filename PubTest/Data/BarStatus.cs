@@ -52,20 +52,35 @@ namespace PubTest
             });
             CreateBartenderAgent();
             CreateBouncerAgent();
+            CreateWaiterAgent();
+        }
+
+        #region Simulation 
+
+        public void StopSimulation()
+        {
+            IsRunning = false;
+            bouncer.Deactivate();
         }
 
         private void SimulationCountdown()
         {
             SimulationTimeLeft = (startTime - DateTime.Now).Seconds;
+            if (SimulationTimeLeft <= 0)
+                StopSimulation();
         }
 
-        public void StopSimulation()
+        #region SimulationSpeed
+
+        private float TimeMultiplier { get; } = 1.0f;
+        public int AdjustTimeToSimulationSpeed(int time)
         {
-            IsRunning = false;
-            bartender.Deactivate();
-            waiter.Deactivate();
-            bouncer.Deactivate();
+            return (int)(time * TimeMultiplier);
         }
+
+        #endregion
+
+        #endregion
 
         #region Private Members
 
@@ -73,7 +88,6 @@ namespace PubTest
 
         private Time time;
         private CancellationToken AgentCancellationToken;
-        private bool IsRunning { get; set; } = false;
 
         private BartenderAgent bartender;
         private WaiterAgent waiter;
@@ -83,6 +97,8 @@ namespace PubTest
 
 
         #region Public Properties
+
+        public bool IsRunning { get; private set; } = false;
 
         public int SimulationTimeLeft { get; private set; }
 
@@ -189,15 +205,7 @@ namespace PubTest
 
         #endregion
 
-        #region SimulationSpeed
 
-        private float TimeMultiplier { get; } = 1.0f;
-        public int AdjustTimeToSimulationSpeed(int time)
-        {
-            return (int)(time * TimeMultiplier);
-        }
-
-        #endregion
 
         #region Bartender
 
@@ -250,6 +258,7 @@ namespace PubTest
         public int GuestsInBar { get { return GuestAgent.TotalGuests; } }
         public bool CanTakeTable { get { return TableAvailableCount > 0; } }
 
+        public int TablesWithGlasses { get; set; }
         public int TotalTableCount { get; private set; }
         public int TableAvailableCount { get { return TotalTableCount - TableInUseCount; } }
         public int TableInUseCount { get; set; }
@@ -266,6 +275,7 @@ namespace PubTest
         {
             bartender = new BartenderAgent(this, 3000, 3000)
             { IsActive = true };
+
             time.CreateAndStartAgent(bartender, AgentCancellationToken);
         }
 
@@ -273,7 +283,16 @@ namespace PubTest
         {
             bouncer = new BouncerAgent(this, 4000, 10000)
             { IsActive = true };
+
             time.CreateAndStartAgent(bouncer, AgentCancellationToken);
+        }
+
+        public void CreateWaiterAgent()
+        {
+            waiter = new WaiterAgent(this, 10000, 15000)
+            { IsActive = true };
+
+            time.CreateAndStartAgent(waiter, AgentCancellationToken);
         }
 
         #endregion
@@ -284,7 +303,8 @@ namespace PubTest
         }
         public void PutGlassOnShelf()
         {
-            GlassInUseCount--;
+            if (GlassAvailableCount != TotalGlassCount)
+                GlassInUseCount--;
         }
         public void TakeTable()
         {
@@ -292,7 +312,8 @@ namespace PubTest
         }
         public void ReturnTable()
         {
-            TableInUseCount--;
+            if (TableAvailableCount != TotalTableCount)
+                TableInUseCount--;
         }
 
         #endregion

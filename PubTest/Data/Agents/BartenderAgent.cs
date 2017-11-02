@@ -20,9 +20,15 @@ namespace PubTest
         public override Action Behaviour { get; set; }
         public override BarStatus CurrentBar { get; set; }
 
+        public override void Deactivate()
+        {
+            CurrentBar.AddBartenderAction("Bartender went home");
+            base.Deactivate();
+        }
 
         public BartenderAgent(BarStatus currentBar, int getGlassWait, int pourDrinkWait)
         {
+            CurrentBar = currentBar;
             TotalBartenders++;
             gettingGlassWaitTime = getGlassWait;
             pouringDrinkWaitTime = pourDrinkWait;           
@@ -49,6 +55,10 @@ namespace PubTest
                         holdingGlass = false;
                         currentBar.AddBartenderAction("Served drink to customer " + nameOfGuest);
                     }
+                }
+                if (currentBar.GuestsInBar == 0 && !currentBar.IsRunning)
+                {
+                    Deactivate();
                 }
             };            
         }

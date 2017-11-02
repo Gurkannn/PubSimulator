@@ -59,6 +59,7 @@ namespace PubTest
                     {
                         Thread.Sleep(drinkTime);
                         currentBar.AddGuestAction(Name + " Finished drink and left bar");
+                        currentBar.TablesWithGlasses++;
                         currentBar.ReturnTable();
                         Deactivate();
                     }

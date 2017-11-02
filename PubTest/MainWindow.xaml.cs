@@ -17,7 +17,7 @@ namespace PubTest
         public MainWindow()
         {
             InitializeComponent();
-            BarStatus bs = new BarStatus(10, 10, 120);
+            BarStatus bs = new BarStatus(10, 10, 300);
             StatusPanel.DataContext = bs;
 
             //Not MVVM

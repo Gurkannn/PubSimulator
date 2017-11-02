@@ -15,8 +15,15 @@ namespace PubTest
         public override Action Behaviour { get; set; }
         public override BarStatus CurrentBar { get; set; }
 
+        public override void Deactivate()
+        {
+            CurrentBar.AddBouncerAction("Bouncer went home");
+            base.Deactivate();
+        }
+
         public BouncerAgent(BarStatus currentBar, int minWaitPerGuest, int maxWaitPerGuest)
         {
+            CurrentBar = currentBar;
             totalBouncers++;
             Random rand = new Random();
             //Behaviour = new BlockingCollection<Action>();
