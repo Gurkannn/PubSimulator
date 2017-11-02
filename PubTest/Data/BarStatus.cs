@@ -6,31 +6,26 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
 using System.Windows.Threading;
 
 namespace PubTest
 {
-    public class BarStatus : BaseViewModel
+    public class BarStatus
     {
 
-        #region ICommands
-
-        public ICommand StartSimulationCommand { get; set; }
-        public bool CanStartSimulation { get { return !IsRunning; } }
-
-        #endregion
+        //public RelayCommand StartSimulationAction;
+        public BarViewModel.StartSimulationButtonEventHandler StartSimulationEventHandler;
 
         #region Constructor
 
         public BarStatus(int TotalGlasses, int TotalTables, int SimulationDurationInSeconds)
         {
             SimulationDuration = SimulationDurationInSeconds;
-            StartSimulationCommand = new RelayCommand(() =>
-            {
-                Dispatcher.CurrentDispatcher.Invoke(() => { StartSimulation(SimulationDuration); });
-            });
+            StartSimulationEventHandler = (sender, e) => { Dispatcher.CurrentDispatcher.Invoke(() => { StartSimulation(SimulationDuration); }); };
+            //StartSimulationAction = new RelayCommand(() =>
+            //{
+            //    Dispatcher.CurrentDispatcher.Invoke(() => { StartSimulation(SimulationDuration); });
+            //});
 
             time = new Time();
             AgentCancellationToken = new CancellationToken(IsRunning);
@@ -87,7 +82,7 @@ namespace PubTest
 
         #region SimulationSpeed
 
-        private float TimeMultiplier { get; } = 0.5f;
+        private float TimeMultiplier { get; } = 1f;
         public int AdjustTimeToSimulationSpeed(int time)
         {
             return (int)(time * TimeMultiplier);
@@ -101,6 +96,10 @@ namespace PubTest
 
         private int SimulationDuration;
 
+        private int guestsInBarQueue;
+        private int guestsInTableQueue;
+        private int glassInUse;
+        private int tablesInUse;
         private Time time;
         private CancellationToken AgentCancellationToken;
 
@@ -121,28 +120,7 @@ namespace PubTest
 
         #region CompletedActionLists       
 
-        #region Observable Lists
-        private ObservableCollection<string> bartenderActions = new ObservableCollection<string>();
-        public ObservableCollection<string> BartenderActions { get { return bartenderActions; } set { bartenderActions = value; OnPropertyChanged("BartenderActions"); } }
 
-        private ObservableCollection<string> waiterActions = new ObservableCollection<string>();
-        public ObservableCollection<string> WaiterActions
-        {
-            get { return waiterActions; }
-            set
-            {
-                waiterActions = value; OnPropertyChanged("WaiterActions");
-            }
-        }
-
-        private ObservableCollection<string> bouncerActions = new ObservableCollection<string>();
-        public ObservableCollection<string> BouncerActions { get { return bouncerActions; } set { bouncerActions = value; OnPropertyChanged("BouncerActions"); } }
-
-        private ObservableCollection<string> guestActions = new ObservableCollection<string>();
-        public ObservableCollection<string> GuestActions { get { return guestActions; } set { guestActions = value; OnPropertyChanged("GuestActions"); } }
-
-
-        #endregion
 
         #region Thread-safe lists
         public BlockingCollection<string> BartenderCompletedActions { get; private set; }
@@ -155,53 +133,38 @@ namespace PubTest
 
         public void AddBartenderAction(string actionText)
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                actionText = TotalActions + ": " + actionText;
-                BartenderCompletedActions.Add(actionText);
-                BartenderActions.Insert(0, actionText);
-                OnPropertyChanged("BartenderActions");
-                OnBartenderActionEventTrigger(new ActionEventArgs(actionText));
-            }));
+
+            actionText = TotalActions + ": " + actionText;
+            BartenderCompletedActions.Add(actionText);
+            OnBartenderActionEventTrigger(new ActionEventArgs(actionText));
+
         }
 
         public void AddWaiterAction(string actionText)
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                actionText = TotalActions + ": " + actionText;
-                WaiterCompletedActions.Add(actionText);
-                WaiterActions.Insert(0, actionText);
-                OnPropertyChanged("WaiterActions");
-                OnWaiterActionEventTrigger(new ActionEventArgs(actionText));
-            }));
+            actionText = TotalActions + ": " + actionText;
+            WaiterCompletedActions.Add(actionText);
+            OnWaiterActionEventTrigger(new ActionEventArgs(actionText));
         }
 
         public void AddBouncerAction(string actionText)
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                actionText = TotalActions + ": " + actionText;
-                BouncerCompletedActions.Add(actionText);
-                BouncerActions.Insert(0, actionText);
-                OnPropertyChanged("BouncerActions");
-                OnBouncerActionEventTrigger(new ActionEventArgs(actionText));
-            }));
+            actionText = TotalActions + ": " + actionText;
+            BouncerCompletedActions.Add(actionText);
+            OnBouncerActionEventTrigger(new ActionEventArgs(actionText));
         }
 
         public void AddGuestAction(string actionText)
         {
-            Application.Current.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                actionText = TotalActions + ": " + actionText;
-                GuestCompletedActions.Add(actionText);
-                GuestActions.Insert(0, actionText);
-                OnPropertyChanged("GuestActions");
-                OnGuestActionEventTrigger(new ActionEventArgs(actionText));
-            }));
+            actionText = TotalActions + ": " + actionText;
+            GuestCompletedActions.Add(actionText);
+            OnGuestActionEventTrigger(new ActionEventArgs(actionText));
         }
 
         public delegate void ActionEventHandler(object sender, ActionEventArgs e);
+        public delegate void StatusEventHandler(object sender, StatusEventArgs e);
+
+        public event StatusEventHandler OnStatusChanged;
 
         public event ActionEventHandler OnBartenderActionCompleted;
         public event ActionEventHandler OnWaiterActionCompleted;
@@ -209,6 +172,12 @@ namespace PubTest
         public event ActionEventHandler OnGuestActionCompleted;
 
         #region Event triggers
+
+        protected virtual void OnStatusChangedTrigger()
+        {
+            StatusEventArgs args = new StatusEventArgs(GuestsInBarQueue, GuestsInTableQueue, GlassInUseCount, TableInUseCount);
+            OnStatusChanged?.Invoke(this, args);
+        }
 
         protected virtual void OnBartenderActionEventTrigger(ActionEventArgs args)
         {
@@ -229,6 +198,8 @@ namespace PubTest
 
 
         #endregion
+
+        #region CallbackRegister Methods
 
         public void RegisterBartenderActionCallback(ActionEventHandler del)
         {
@@ -251,6 +222,7 @@ namespace PubTest
 
         #endregion
 
+        #endregion
 
 
         #region Bartender
@@ -260,8 +232,7 @@ namespace PubTest
         public bool CanTakeGlass { get { return GlassAvailableCount > 0; } }
         public int TotalGlassCount { get; private set; }
         public int GlassAvailableCount { get { return TotalGlassCount - GlassInUseCount; } }
-        public int GlassInUseCount { get; set; }
-
+        public int GlassInUseCount { get { return glassInUse; } set { glassInUse = value; OnStatusChangedTrigger(); } }
         public bool IsDrinkReady { get; set; }
 
         #endregion
@@ -302,14 +273,14 @@ namespace PubTest
             return guest.Name;
         }
 
-        public int GuestsInBarQueue { get; set; }
-        public int GuestsInTableQueue { get; set; }
+        public int GuestsInBarQueue { get { return guestsInBarQueue; } set { guestsInBarQueue = value; OnStatusChangedTrigger(); } }
+        public int GuestsInTableQueue { get { return guestsInTableQueue; } set { guestsInTableQueue = value; OnStatusChangedTrigger(); } }
         public bool CanTakeTable { get { return TableAvailableCount > 0; } }
 
         public int TablesWithGlasses { get; set; }
         public int TotalTableCount { get; private set; }
         public int TableAvailableCount { get { return TotalTableCount - TableInUseCount; } }
-        public int TableInUseCount { get; set; }
+        public int TableInUseCount { get { return tablesInUse; } set { tablesInUse = value; OnStatusChangedTrigger(); } }
 
         #endregion
 

@@ -80,7 +80,7 @@
                 </TextBlock>
                 <TextBlock HorizontalAlignment="Center">
                     <Run Text="Time left:"/>
-                    <Run Text="{Binding SimulationTimeLeft, Mode=OneWay, FallbackValue=1}" />
+                    <Run Text="{Binding TimeLeft, Mode=OneWay, FallbackValue=0}" />
                     <!--<Run>(</Run><Run Text="{Binding TotalTables, Mode=OneWay, FallbackValue=0}"/><Run Text=" total)" />-->
                 </TextBlock>
             </StackPanel>
