@@ -120,8 +120,6 @@ namespace PubTest
 
         #region CompletedActionLists       
 
-
-
         #region Thread-safe lists
         public BlockingCollection<string> BartenderCompletedActions { get; private set; }
         public BlockingCollection<string> WaiterCompletedActions { get; private set; }
@@ -224,7 +222,6 @@ namespace PubTest
 
         #endregion
 
-
         #region Bartender
 
         public bool CanTakeOrder { get { return BarQueue.Count > 0; } }
@@ -294,8 +291,8 @@ namespace PubTest
         {
             bartender = new BartenderAgent(this, 3000, 3000)
             { IsActive = true };
-
             time.StartAgent(bartender, AgentCancellationToken);
+            AddBartenderAction("Started working");
         }
 
         public void CreateBouncerAgent()
@@ -312,6 +309,7 @@ namespace PubTest
             { IsActive = true };
 
             time.StartAgent(waiter, AgentCancellationToken);
+            AddWaiterAction("Started working");
         }
 
         #endregion

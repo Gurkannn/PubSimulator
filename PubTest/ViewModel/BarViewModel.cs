@@ -17,8 +17,6 @@ namespace PubTest
         #region ICommands
 
         public ICommand StartSimulationCommand { get; set; }
-        public ICommand StartCountdownCommand { get; set; }
-        public ICommand StartViewCountdownCommand { get; set; }
 
         #endregion
 
@@ -117,6 +115,7 @@ namespace PubTest
         #endregion
 
         #region Private Members    
+
         private int totalDuration;    
     
         private bool IsRunning { get { return TimeLeft > 0; } }
@@ -147,7 +146,6 @@ namespace PubTest
         #endregion
 
         #endregion
-
 
         #region Public Properties
 

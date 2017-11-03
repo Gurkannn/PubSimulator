@@ -21,8 +21,10 @@ namespace PubTest
         public MainWindow()
         {
             InitializeComponent();
+
             BarStatus bStatus = new BarStatus(glassAmount, tableAmount, simualtionDuration);
             BarViewModel bViewModel = new BarViewModel(glassAmount, tableAmount, simualtionDuration);
+
             bViewModel.OnStartSimulationPressed += bStatus.StartSimulationEventHandler;
 
             bStatus.OnStatusChanged += bViewModel.UpdateStatus;            
@@ -31,26 +33,7 @@ namespace PubTest
             bStatus.RegisterWaiterActionCallback(bViewModel.UpdateWaiterList);
             bStatus.RegisterGuestActionCallback(bViewModel.UpdateGuestList);
 
-            this.DataContext = bViewModel;
-
-            #region comment
-            //Not MVVM
-            //bs.RegisterBartenderActionCallback((sender, e) =>
-            //{
-            //    Dispatcher.Invoke(() => { BartenderActionList.Items.Insert(0, e.ActionValue); });
-            //});
-
-            //bs.RegisterWaiterActionCallback((sender, e) =>
-            //{
-            //    Dispatcher.Invoke(() => { WaiterActionList.Items.Insert(0, e.ActionValue); });
-            //});
-
-            //bs.RegisterGuestActionCallback((sender, e) =>
-            //{
-            //    Dispatcher.Invoke(() => { GuestActionList.Items.Insert(0, e.ActionValue); });
-            //});
-            #endregion
-
+            this.DataContext = bViewModel;   
         }
     }
 }
